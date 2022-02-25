@@ -215,6 +215,7 @@ with pkgs.hax; {
       export PATH=~/.npm-global/bin:$PATH
       export PATH="$PNPM_HOME:$PATH"
       export PATH=/home/tendie_chef/.nimble/bin:$PATH
+      export PATH=/mnt/c/Program\ Files/Microsoft\ VS\ Code/bin:$PATH
 
       # checks to see if we are in a windows or linux dir
       function isWinDir {
@@ -263,6 +264,9 @@ with pkgs.hax; {
 
   programs.direnv = {
     enable = true;
+    nix-direnv = { 
+      enable = true;
+    };
   };
 
   programs.mcfly = {

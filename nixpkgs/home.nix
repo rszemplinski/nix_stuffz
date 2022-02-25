@@ -134,23 +134,12 @@ with pkgs.hax; {
         (soundScript "guh" guhSound)
         (soundScript "bruh" bruhSound)
       ];
-
-    file.sqliterc = {
-      target = ".sqliterc";
-      text = ''
-        .output /dev/null
-        .headers on
-        .mode column
-        .prompt "> " ". "
-        .separator ROW "\n"
-        .nullvalue NULL
-        .output stdout
-      '';
-    };
   };
 
   programs.zsh = {
     enable = true;
+    inherit (config.home) sessionVariables;
+    enableAutosuggestions = true;
     shellAliases = {
         mkdir = "mkdir -pv";
         hm = "home-manager";
@@ -168,8 +157,43 @@ with pkgs.hax; {
     oh-my-zsh = {
         enable = true;
         plugins = [ "git" "thefuck" "systemd" ];
-        theme = "powerlevel10k/powerlevel10k";
+        theme = "powerlevel10k";
     };
+
+    initExtra = ''
+      shopt -s histappend
+      set +h
+      export DO_NOT_TRACK=1
+      # add local scripts to path
+
+      export PATH=~/.npm-global/bin:$PATH
+
+      # checks to see if we are in a windows or linux dir
+      function isWinDir {
+      case $PWD/ in
+          /mnt/*) return $(true);;
+          *) return $(false);;
+      esac
+      }
+      # wrap the git command to either run windows git or linux
+      function git {
+      if isWinDir
+      then
+          git.exe "$@"
+      else
+          /usr/bin/git "$@"
+      fi
+      }%
+
+      . ~/.zshrc.old
+      . ~/.profile
+      export PATH="$PATH:$HOME/.bin/:$HOME/.local/bin:$HOME/.local/bin/flutter/bin"
+      source ~/.nix-profile/etc/profile.d/nix.sh
+      # bash completions
+      source ~/.nix-profile/etc/profile.d/bash_completion.sh
+      source ~/.nix-profile/share/bash-completion/completions/git
+      source ~/.nix-profile/share/bash-completion/completions/ssh
+    '';
   };
 
   programs.direnv = {
@@ -178,7 +202,7 @@ with pkgs.hax; {
 
   programs.mcfly = {
     enable = true;
-    enableBashIntegration = true;
+    enableZshIntegration = true;
   };
 
   programs.htop.enable = true;

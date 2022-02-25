@@ -34,11 +34,10 @@ with pkgs.hax; {
     stateVersion = "21.05";
 
     sessionVariables = {
-      EDITOR = "nano";
+      EDITOR = "vim";
       HISTCONTROL = "ignoreboth";
       PAGER = "less";
       LESS = "-iR";
-      BASH_SILENCE_DEPRECATION_WARNING = "1";
     };
 
     packages = with lib;
@@ -46,8 +45,6 @@ with pkgs.hax; {
       lib.flatten [
         (python3.withPackages (pkgs: with pkgs; [ black mypy bpython ipdb ]))
         atool
-        bash-completion
-        bashInteractive_5
         bat
         bc
         bzip2
@@ -139,7 +136,10 @@ with pkgs.hax; {
   programs.zsh = {
     enable = true;
     inherit (config.home) sessionVariables;
+    autocd = true;
+    enableCompletion = true;
     enableAutosuggestions = true;
+
     shellAliases = {
         mkdir = "mkdir -pv";
         hm = "home-manager";
@@ -149,6 +149,7 @@ with pkgs.hax; {
         now = "date +%s";
         fzfp = "fzf --preview 'bat --style=numbers --color=always {}'";
     };
+
     history = {
         size = 10000;
         path = "${config.xdg.dataHome}/zsh/history";
@@ -156,44 +157,108 @@ with pkgs.hax; {
 
     oh-my-zsh = {
         enable = true;
-        plugins = [ "git" "thefuck" "systemd" ];
-        theme = "powerlevel10k";
+        plugins = [ "git" "sudo" "thefuck" "systemd"];
+        theme = "powerlevel10k/powerlevel10k";
     };
 
-    initExtra = ''
-      shopt -s histappend
+    plugins = [
+      {
+        name = "nix-shell";
+        src = fetchFromGitHub {
+          owner = "chisui";
+          repo = "zsh-nix-shell";
+          rev = "03a1487655c96a17c00e8c81efdd8555829715f8";
+          sha256 = "1avnmkjh0zh6wmm87njprna1zy4fb7cpzcp8q7y03nw3aq22q4ms";
+        };
+      }
+      {
+        name = "zsh-completions";
+        src = fetchFromGitHub {
+          owner = "zsh-users";
+          repo = "zsh-completions";
+          rev = "0.27.0";
+          sha256 = "1c2xx9bkkvyy0c6aq9vv3fjw7snlm0m5bjygfk5391qgjpvchd29";
+        };
+      }
+      {
+        name = "zsh-syntax-highlighting";
+        src = fetchFromGitHub {
+          owner = "zsh-users";
+          repo = "zsh-syntax-highlighting";
+          rev = "db6cac391bee957c20ff3175b2f03c4817253e60";
+          sha256 = "0d9nf3aljqmpz2kjarsrb5nv4rjy8jnrkqdlalwm2299jklbsnmw";
+        };
+      }
+      {
+        name = "powerlevel10k";
+        file = "powerlevel10k.zsh-theme";
+        src = fetchFromGitHub {
+          owner = "romkatv";
+          repo = "powerlevel10k";
+          rev = "b7d90c84671183797bdec17035fc2d36b5d12292";
+          sha256 = "0nzvshv3g559mqrlf4906c9iw4jw8j83dxjax275b2wi8ix0wgmj";
+        };
+      }
+      {
+        name = "powerlevel10k-config";
+        src = lib.cleanSource ./p10k-config;
+        file = ".p10k.zsh";
+      }
+    ];
+
+    initExtraFirst = ''
       set +h
       export DO_NOT_TRACK=1
-      # add local scripts to path
 
+      export NVM_DIR="$HOME/.nvm"
+      export PNPM_HOME="/home/tendie_chef/.local/share/pnpm"
       export PATH=~/.npm-global/bin:$PATH
+      export PATH="$PNPM_HOME:$PATH"
+      export PATH=/home/tendie_chef/.nimble/bin:$PATH
 
       # checks to see if we are in a windows or linux dir
       function isWinDir {
-      case $PWD/ in
-          /mnt/*) return $(true);;
-          *) return $(false);;
-      esac
+        case $PWD/ in
+            /mnt/*) return $(true);;
+            *) return $(false);;
+        esac
       }
       # wrap the git command to either run windows git or linux
       function git {
-      if isWinDir
-      then
-          git.exe "$@"
-      else
-          /usr/bin/git "$@"
-      fi
-      }%
-
-      . ~/.zshrc.old
-      . ~/.profile
-      export PATH="$PATH:$HOME/.bin/:$HOME/.local/bin:$HOME/.local/bin/flutter/bin"
-      source ~/.nix-profile/etc/profile.d/nix.sh
-      # bash completions
-      source ~/.nix-profile/etc/profile.d/bash_completion.sh
-      source ~/.nix-profile/share/bash-completion/completions/git
-      source ~/.nix-profile/share/bash-completion/completions/ssh
+        if isWinDir
+        then
+            git.exe "$@"
+        else
+            /usr/bin/git "$@"
+        fi
+      }
     '';
+
+    initExtra = ''
+      if [[ -r "${config.home.homeDirectory}/.nix-profile/etc/profile.d/nix.sh" ]]; then
+        source "${config.home.homeDirectory}/.nix-profile/etc/profile.d/nix.sh"
+      fi
+
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+      # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+    '';
+  };
+
+  programs.vim = {
+    enable = true;
+    settings = { ignorecase = true; };
+    extraConfig = ''
+      set mouse=a
+      set number
+    '';
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;
   };
 
   programs.direnv = {
@@ -218,7 +283,7 @@ with pkgs.hax; {
       push.default = "simple";
       pull.ff = "only";
       core = {
-        editor = "nano";
+        editor = "vim";
         pager = "delta --dark";
       };
     };

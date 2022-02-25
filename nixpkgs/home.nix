@@ -152,33 +152,27 @@ with pkgs.hax; {
     };
   };
 
-  programs.bash = {
+  programs.zsh = {
     enable = true;
-    inherit (config.home) sessionVariables;
-    historyFileSize = -1;
-    historySize = -1;
     shellAliases = {
-      mkdir = "mkdir -pv";
-      hm = "home-manager";
+        mkdir = "mkdir -pv";
+        hm = "home-manager";
 
-      # misc
-      space = "du -Sh | sort -rh | head -10";
-      now = "date +%s";
-      fzfp = "fzf --preview 'bat --style=numbers --color=always {}'";
+        # misc
+        space = "du -Sh | sort -rh | head -10";
+        now = "date +%s";
+        fzfp = "fzf --preview 'bat --style=numbers --color=always {}'";
+    };
+    history = {
+        size = 10000;
+        path = "${config.xdg.dataHome}/zsh/history";
     };
 
-    initExtra = ''
-      shopt -s histappend
-      set +h
-      export DO_NOT_TRACK=1
-      # add local scripts to path
-      export PATH="$PATH:$HOME/.bin/:$HOME/.local/bin:$HOME/.local/bin/flutter/bin"
-      source ~/.nix-profile/etc/profile.d/nix.sh
-      # bash completions
-      source ~/.nix-profile/etc/profile.d/bash_completion.sh
-      source ~/.nix-profile/share/bash-completion/completions/git
-      source ~/.nix-profile/share/bash-completion/completions/ssh
-    '';
+    oh-my-zsh = {
+        enable = true;
+        plugins = [ "git" "thefuck" "systemd" ];
+        theme = "robbyrussell";
+    };
   };
 
   programs.direnv = {
@@ -231,10 +225,4 @@ with pkgs.hax; {
       };
     };
   };
-
-
-  imports = [
-    "${fetchTarball "https://github.com/msteen/nixos-vscode-server/tarball/master"}/modules/vscode-server/home.nix"
-  ];
-  services.vscode-server.enable = builtins.pathExists "/etc/nixos";
 }

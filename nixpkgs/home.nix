@@ -8,10 +8,6 @@ let
   lastName = "Szemplinski";
   home = (builtins.getEnv "HOME");
   username = (builtins.getEnv "USER");
-  symbol = "ᛥ";
-
-  # chief keefs stuff
-  kwbauson-cfg = import <kwbauson-cfg>;
 
   coinSound = pkgs.fetchurl {
     url = "https://hexa.dev/static/sounds/coin.wav";
@@ -59,7 +55,7 @@ with pkgs.hax; {
         coreutils-full
         cowsay
         curl
-        deno
+        cmake
         diffutils
         ed
         exa
@@ -128,6 +124,7 @@ with pkgs.hax; {
         xxd
         xz
         zip
+        zsh
         binutils
         (writeShellScriptBin "hms" ''
           git -C ~/.config/nixpkgs/ pull origin main
@@ -171,7 +168,7 @@ with pkgs.hax; {
     oh-my-zsh = {
         enable = true;
         plugins = [ "git" "thefuck" "systemd" ];
-        theme = "robbyrussell";
+        theme = "powerlevel10k/powerlevel10k";
     };
   };
 
@@ -182,29 +179,6 @@ with pkgs.hax; {
   programs.mcfly = {
     enable = true;
     enableBashIntegration = true;
-  };
-
-  programs.starship = {
-    enable = true;
-    settings = {
-      add_newline = false;
-      character = rec {
-        success_symbol = "[${symbol}](bright-green)";
-        error_symbol = "[${symbol}](bright-red)";
-      };
-      directory.style = "fg:#d442f5";
-      nix_shell = {
-        pure_msg = "";
-        impure_msg = "";
-        format = "via [$symbol$state]($style) ";
-      };
-
-      # disabled plugins
-      aws.disabled = true;
-      cmd_duration.disabled = true;
-      gcloud.disabled = true;
-      package.disabled = true;
-    };
   };
 
   programs.htop.enable = true;
